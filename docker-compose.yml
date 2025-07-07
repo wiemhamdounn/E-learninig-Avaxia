@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: elearning-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postegres
+      POSTGRES_DB: elearning
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+  core-backend:
+    build:
+      context: ./ecolearn-elearning-core-core_backend Dev branch
+      dockerfile: Dockerfile
+    container_name: elearning-core-backend
+    ports:
+      - "3000:3000" 
+    env_file:
+      - ./ecolearn-elearning-core-core_backend Dev branch/.env
+    depends_on:
+      - postgres
+    volumes:
+      - ./ecolearn-elearning-core-core_backend Dev branch/uploads:/app/uploads
+    networks:
+      - app-network
+    extra_hosts:
+      - "localhost:host-gateway"
+  backend:
+    build:
+      context: ./skill-management-service
+      dockerfile: Dockerfile
+    container_name: elearning-backend
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./skill-management-service/.env
+    depends_on:
+      - postgres
+    volumes:
+     - ./skill-management-service/uploads:/app/uploads
+    networks:
+      - app-network
+    extra_hosts:
+      - "localhost:host-gateway"
+
+  frontend:
+    build:
+      context: ./FE_TrainingCenter
+      dockerfile: Dockerfile
+    container_name: elearning-frontend
+    ports:
+      - "3200:3000"
+    env_file:
+      - ./FE_TrainingCenter/.env
+    networks:
+      - app-network
+    depends_on:
+      - core-backend
+      - backend
+
+networks:
+  app-network:
+    driver: bridge
